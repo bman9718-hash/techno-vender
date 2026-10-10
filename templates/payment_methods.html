@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Payment methods{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Payment methods</h1>
+    <p class="muted">Only the last four digits are stored. Payments are simulated.</p>
+  </div>
+  <a class="btn" href="{{ url_for('payment_method_form', member=only_member) if only_member else url_for('payment_method_form') }}">Add payment method</a>
+</div>
+
+<form method="get" class="filter">
+  <label for="member">Show</label>
+  <select id="member" name="member" onchange="this.form.submit()">
+    <option value="">All members</option>
+    {% for m in all_members %}
+      <option value="{{ m.member_id }}" {% if only_member == m.member_id %}selected{% endif %}>{{ m.first_name }} {{ m.last_name }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit" class="btn">Filter</button></noscript>
+</form>
+
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Member</th><th>Type</th><th>Nickname</th><th>Brand</th><th>Card</th>
+        <th>Expires</th><th>Default</th><th class="num">Used in</th><th><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pm in rows %}
+      <tr>
+        <td>{{ pm.first_name }} {{ pm.last_name }}</td>
+        <td>{{ pm.method_type }}</td>
+        <td>{{ pm.nickname or '—' }}</td>
+        <td>{{ pm.card_brand }}</td>
+        <td class="nowrap">•••• {{ pm.last_four }}</td>
+        <td class="nowrap">{{ '%02d' | format(pm.expiry_month) }}/{{ pm.expiry_year }}</td>
+        <td>{% if pm.is_default %}<span class="pill pill-active">Default</span>{% endif %}</td>
+        <td class="num">{{ pm.use_count }} purchase{{ '' if pm.use_count == 1 else 's' }}</td>
+        <td class="actions">
+          <a href="{{ url_for('payment_method_form', method_id=pm.payment_method_id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_payment_method', method_id=pm.payment_method_id) }}"
+                onsubmit="return confirm('Delete this payment method? Past purchases are kept.');">
+            <button type="submit" class="link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty">No payment methods here yet.</p>
+{% endif %}
+{% endblock %}

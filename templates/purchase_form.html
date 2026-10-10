@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Edit purchase {{ p.purchase_id }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Edit purchase {{ p.purchase_id }}</h1>
+    <p class="muted">{{ p.first_name }} {{ p.last_name }} · <span class="slot-code">{{ p.slot_code }}</span> {{ p.product_name }} · {{ p.purchased_at.strftime('%Y-%m-%d %H:%M') }}</p>
+  </div>
+</div>
+
+<form method="post" class="form card">
+  <label for="quantity">Quantity</label>
+  <input id="quantity" name="quantity" type="number" min="1" max="10" value="{{ request.form.quantity or p.quantity }}" required>
+
+  <label for="payment_method_id">Paid with</label>
+  <select id="payment_method_id" name="payment_method_id">
+    <option value="">No payment method on file</option>
+    {% for pm in methods %}
+      <option value="{{ pm.payment_method_id }}" {% if pm.payment_method_id == p.payment_method_id %}selected{% endif %}>{{ pm.nickname or pm.method_type }} · {{ pm.card_brand }} ending {{ pm.last_four }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="status">Status</label>
+  <select id="status" name="status">
+    {% for s in statuses %}
+      <option {% if s == p.status %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+
+  <p class="hint">Price stays at {{ p.unit_price | dollars }} with {{ p.discount_percent | round(1) }}% off, as it was on the day of sale. Changing quantity or status moves stock in or out of the machine.</p>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a href="{{ url_for('purchases') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

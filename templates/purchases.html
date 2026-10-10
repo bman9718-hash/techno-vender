@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Purchases{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Purchases</h1>
+    <p class="muted">{{ rows | length }} purchases · {{ completed }} completed · {{ revenue | dollars }} in completed sales</p>
+  </div>
+  <a class="btn" href="{{ url_for('machine') }}">New purchase</a>
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>When</th><th>Member</th><th>Product</th><th class="num">Qty</th>
+        <th class="num">Unit price</th><th class="num">Discount</th><th class="num">Total</th>
+        <th>Paid with</th><th>Status</th><th><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="num">{{ r.purchase_id }}</td>
+        <td class="nowrap">{{ r.purchased_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ r.first_name }} {{ r.last_name }}</td>
+        <td><span class="slot-code">{{ r.slot_code }}</span> {{ r.product_name }}</td>
+        <td class="num">{{ r.quantity }}</td>
+        <td class="num">{{ r.unit_price | dollars }}</td>
+        <td class="num">{{ r.discount_percent | round(1) }}%</td>
+        <td class="num"><strong>{{ r.total_amount | dollars }}</strong></td>
+        <td>{% if r.last_four %}{{ r.nickname or r.card_brand }} ··{{ r.last_four }}{% else %}<span class="muted">Removed</span>{% endif %}</td>
+        <td><span class="pill pill-{{ r.status | lower }}">{{ r.status }}</span></td>
+        <td class="actions">
+          <a href="{{ url_for('edit_purchase', purchase_id=r.purchase_id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_purchase', purchase_id=r.purchase_id) }}"
+                onsubmit="return confirm('Delete purchase {{ r.purchase_id }}? Completed items go back into the machine.');">
+            <button type="submit" class="link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty">No purchases yet. Go to the <a href="{{ url_for('machine') }}">machine</a> and vend something.</p>
+{% endif %}
+{% endblock %}

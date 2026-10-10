@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Techno Vender{% endblock %} · Techno Vender</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('machine') }}">Techno Vender</a>
+    <nav>
+      {% set here = request.endpoint %}
+      <a href="{{ url_for('machine') }}" {% if here == 'machine' %}aria-current="page"{% endif %}>Machine</a>
+      <a href="{{ url_for('purchases') }}" {% if here in ['purchases', 'edit_purchase'] %}aria-current="page"{% endif %}>Purchases</a>
+      <a href="{{ url_for('members') }}" {% if here in ['members', 'member_form'] %}aria-current="page"{% endif %}>Members</a>
+      <a href="{{ url_for('payment_methods') }}" {% if here in ['payment_methods', 'payment_method_form'] %}aria-current="page"{% endif %}>Payment methods</a>
+    </nav>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for kind, text in messages %}
+        <p class="flash flash-{{ kind }}" role="status">{{ text }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>Class project for BMTA. All payments are simulated and no real money moves. Sample data is made up.</footer>
+</body>
+</html>

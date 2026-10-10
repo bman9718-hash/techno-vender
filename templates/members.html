@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Members{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Members</h1>
+    <p class="muted">Plans:
+      {% for p in plans %}{{ p.plan_name }} {{ p.monthly_fee | dollars }}/month, {{ p.discount_percent | round(1) }}% off{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+  </div>
+  <a class="btn" href="{{ url_for('member_form') }}">Add member</a>
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Plan</th><th>Status</th>
+        <th>Started</th><th>Renews</th><th class="num">Purchases</th><th class="num">Payment methods</th>
+        <th><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in rows %}
+      <tr>
+        <td>{{ m.first_name }} {{ m.last_name }}</td>
+        <td>{{ m.email }}</td>
+        <td class="nowrap">{{ m.phone or '—' }}</td>
+        <td>{{ m.plan_name }}</td>
+        <td><span class="pill pill-{{ m.status | lower }}">{{ m.status }}</span></td>
+        <td class="nowrap">{{ m.start_date }}</td>
+        <td class="nowrap">{{ m.renewal_date }}</td>
+        <td class="num">{{ m.purchase_count }}</td>
+        <td class="num"><a href="{{ url_for('payment_methods', member=m.member_id) }}">{{ m.method_count }}</a></td>
+        <td class="actions">
+          <a href="{{ url_for('member_form', member_id=m.member_id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_member', member_id=m.member_id) }}"
+                onsubmit="return confirm('Delete {{ m.first_name }} {{ m.last_name }} and their saved payment methods?');">
+            <button type="submit" class="link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty">No members yet. <a href="{{ url_for('member_form') }}">Add the first one.</a></p>
+{% endif %}
+{% endblock %}

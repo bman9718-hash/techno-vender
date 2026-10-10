@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Machine{% endblock %}
+{% block content %}
+<div class="machine-layout">
+  <section class="cabinet" aria-label="Vending machine">
+    <div class="cabinet-sign">TECHNO VENDER</div>
+    <div class="glass">
+      {% for p in products %}
+        {% set sold_out = p.stock_qty == 0 %}
+        {% set picked = chosen and chosen.product_id == p.product_id %}
+        {% if sold_out %}
+          <div class="slot sold-out" aria-label="{{ p.slot_code }} {{ p.product_name }}, sold out">
+        {% else %}
+          <a class="slot{% if picked %} picked{% endif %}" href="{{ url_for('machine', slot=p.slot_code) }}#keypad">
+        {% endif %}
+            <span class="slot-code">{{ p.slot_code }}</span>
+            <span class="slot-pic">{% if p.image and p.image.startswith('http') %}<img src="{{ p.image }}" alt="">{% else %}{{ p.image or '📦' }}{% endif %}</span>
+            <span class="slot-name">{{ p.product_name }}</span>
+            <span class="slot-price">{{ p.price | dollars }}</span>
+            <span class="slot-stock">{% if sold_out %}Sold out{% else %}{{ p.stock_qty }} left{% endif %}</span>
+        {% if sold_out %}</div>{% else %}</a>{% endif %}
+      {% endfor %}
+    </div>
+    <div class="tray">Pick-up</div>
+  </section>
+
+  <section class="keypad" id="keypad" aria-labelledby="keypad-h">
+    {% if chosen %}
+      <h1 id="keypad-h"><span class="slot-code">{{ chosen.slot_code }}</span> {{ chosen.product_name }}</h1>
+      <p class="muted">{{ chosen.price | dollars }} each · {{ chosen.stock_qty }} in the machine</p>
+
+      {% if members %}
+      <form method="post" action="{{ url_for('vend') }}" class="form" id="vend-form">
+        <input type="hidden" name="product_id" value="{{ chosen.product_id }}">
+        <input type="hidden" name="slot_code" value="{{ chosen.slot_code }}">
+        <input type="hidden" id="price" value="{{ chosen.price }}">
+
+        <label for="member_id">Who's buying?</label>
+        <select id="member_id" name="member_id" required>
+          {% for m in members %}
+            <option value="{{ m.member_id }}" data-discount="{{ m.discount_percent }}">{{ m.first_name }} {{ m.last_name }} · {{ m.plan_name }} ({{ m.discount_percent | round(1) }}% off)</option>
+          {% endfor %}
+        </select>
+
+        <label for="payment_method_id">Pay with</label>
+        <select id="payment_method_id" name="payment_method_id" required>
+          {% for pm in methods %}
+            <option value="{{ pm.payment_method_id }}" data-member="{{ pm.member_id }}">{{ pm.nickname or pm.method_type }} · {{ pm.card_brand }} ending {{ pm.last_four }}{% if pm.is_default %} (default){% endif %}</option>
+          {% endfor %}
+        </select>
+        <p class="hint" id="no-methods" hidden>This member has no saved payment methods. <a href="{{ url_for('payment_method_form') }}">Add one</a> first.</p>
+
+        <label for="quantity">Quantity</label>
+        <input id="quantity" name="quantity" type="number" min="1" max="{{ [chosen.stock_qty, 10] | min }}" value="1" required>
+
+        <p class="total-line">Total <strong id="total">{{ chosen.price | dollars }}</strong></p>
+        <button type="submit" class="btn btn-vend">Vend</button>
+      </form>
+      {% else %}
+        <p>No active members yet. <a href="{{ url_for('member_form') }}">Add a member</a> to start vending.</p>
+      {% endif %}
+    {% else %}
+      <h1 id="keypad-h">Pick a slot</h1>
+      <p class="muted">Tap a product in the machine to buy it. Members get their plan's discount automatically.</p>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+// Show only the chosen member's payment methods, and keep the total up to date.
+(function () {
+  var memberSelect = document.getElementById("member_id");
+  if (!memberSelect) return;
+  var methodSelect = document.getElementById("payment_method_id");
+  var quantity = document.getElementById("quantity");
+  var price = parseFloat(document.getElementById("price").value);
+  var allOptions = Array.prototype.slice.call(methodSelect.options);
+
+  function refresh() {
+    var member = memberSelect.value;
+    methodSelect.innerHTML = "";
+    allOptions.forEach(function (option) {
+      if (option.dataset.member === member) methodSelect.appendChild(option);
+    });
+    var none = methodSelect.options.length === 0;
+    document.getElementById("no-methods").hidden = !none;
+    document.querySelector(".btn-vend").disabled = none;
+
+    var discount = parseFloat(memberSelect.selectedOptions[0].dataset.discount);
+    var qty = parseInt(quantity.value, 10) || 0;
+    var total = Math.round(price * qty * (1 - discount / 100) * 100) / 100;
+    document.getElementById("total").textContent = "$" + total.toFixed(2);
+  }
+  memberSelect.addEventListener("change", refresh);
+  quantity.addEventListener("input", refresh);
+  refresh();
+})();
+</script>
+{% endblock %}

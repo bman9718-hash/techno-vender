@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{% if member_id %}Edit member{% else %}Add member{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{% if member_id %}Edit {{ m.first_name }} {{ m.last_name }}{% else %}Add member{% endif %}</h1>
+</div>
+
+<form method="post" class="form card">
+  <div class="row">
+    <div>
+      <label for="first_name">First name</label>
+      <input id="first_name" name="first_name" value="{{ m.first_name if m else '' }}" maxlength="50" required>
+    </div>
+    <div>
+      <label for="last_name">Last name</label>
+      <input id="last_name" name="last_name" value="{{ m.last_name if m else '' }}" maxlength="50" required>
+    </div>
+  </div>
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" value="{{ m.email if m else '' }}" maxlength="120" required>
+
+  <label for="phone">Phone <span class="muted">(optional)</span></label>
+  <input id="phone" name="phone" type="tel" value="{{ m.phone or '' if m else '' }}" maxlength="20">
+
+  <div class="row">
+    <div>
+      <label for="plan_id">Membership plan</label>
+      <select id="plan_id" name="plan_id">
+        {% for p in plans %}
+          <option value="{{ p.plan_id }}" {% if m and m.plan_id == p.plan_id %}selected{% endif %}>{{ p.plan_name }} · {{ p.monthly_fee | dollars }}/month · {{ p.discount_percent | round(1) }}% off</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        {% for s in statuses %}
+          <option {% if m and m.status == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="start_date">Start date</label>
+      <input id="start_date" name="start_date" type="date" value="{{ m.start_date if m and m.start_date else '' }}" required>
+    </div>
+    <div>
+      <label for="renewal_date">Renewal date</label>
+      <input id="renewal_date" name="renewal_date" type="date" value="{{ m.renewal_date if m and m.renewal_date else '' }}" required>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{% if member_id %}Save{% else %}Add member{% endif %}</button>
+    <a href="{{ url_for('members') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

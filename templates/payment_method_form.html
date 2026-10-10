@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{% if method_id %}Edit payment method{% else %}Add payment method{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{% if method_id %}Edit payment method{% else %}Add payment method{% endif %}</h1>
+</div>
+
+<form method="post" class="form card" autocomplete="off">
+  <p class="hint warn">Class project: don't type a real card number. Only a brand and four digits are saved.</p>
+
+  <label for="member_id">Member</label>
+  <select id="member_id" name="member_id" required>
+    {% for m in all_members %}
+      <option value="{{ m.member_id }}" {% if pm.member_id == m.member_id %}selected{% endif %}>{{ m.first_name }} {{ m.last_name }}</option>
+    {% endfor %}
+  </select>
+
+  <div class="row">
+    <div>
+      <label for="method_type">Type</label>
+      <select id="method_type" name="method_type">
+        {% for t in types %}
+          <option {% if pm.method_type == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="card_brand">Brand</label>
+      <input id="card_brand" name="card_brand" value="{{ pm.card_brand or '' }}" maxlength="20" placeholder="Visa, Interac, Apple Pay…" required>
+    </div>
+  </div>
+
+  <label for="nickname">Nickname <span class="muted">(optional)</span></label>
+  <input id="nickname" name="nickname" value="{{ pm.nickname or '' }}" maxlength="40" placeholder="Work Visa">
+
+  <div class="row row-3">
+    <div>
+      <label for="last_four">Last four digits</label>
+      <input id="last_four" name="last_four" value="{{ pm.last_four or '' }}" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required>
+    </div>
+    <div>
+      <label for="expiry_month">Expiry month</label>
+      <input id="expiry_month" name="expiry_month" type="number" min="1" max="12" value="{{ pm.expiry_month or '' }}" required>
+    </div>
+    <div>
+      <label for="expiry_year">Expiry year</label>
+      <input id="expiry_year" name="expiry_year" type="number" min="2024" max="2100" value="{{ pm.expiry_year or '' }}" required>
+    </div>
+  </div>
+
+  <label class="check"><input type="checkbox" name="is_default" {% if pm.is_default %}checked{% endif %}> Make this the member's default</label>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{% if method_id %}Save{% else %}Add payment method{% endif %}</button>
+    <a href="{{ url_for('payment_methods') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
